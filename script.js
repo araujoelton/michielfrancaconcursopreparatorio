@@ -1,25 +1,25 @@
 // Menu Mobile
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const hamburger = document.querySelector('.hamburger');
     const navMenu = document.querySelector('.nav-menu');
     const navLinks = document.querySelectorAll('.nav-menu a');
 
     // Toggle menu mobile
-    hamburger.addEventListener('click', function() {
+    hamburger.addEventListener('click', function () {
         navMenu.classList.toggle('active');
         hamburger.classList.toggle('active');
     });
 
     // Fechar menu ao clicar em um link
     navLinks.forEach(link => {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function () {
             navMenu.classList.remove('active');
             hamburger.classList.remove('active');
         });
     });
 
     // Fechar menu ao clicar fora dele
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
             navMenu.classList.remove('active');
             hamburger.classList.remove('active');
@@ -48,7 +48,7 @@ const observerOptions = {
     rootMargin: '0px 0px -50px 0px'
 };
 
-const observer = new IntersectionObserver(function(entries) {
+const observer = new IntersectionObserver(function (entries) {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.style.opacity = '1';
@@ -58,9 +58,9 @@ const observer = new IntersectionObserver(function(entries) {
 }, observerOptions);
 
 // Observar elementos para animação
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const animateElements = document.querySelectorAll('.curso-card, .feature, .stat, .info-item');
-    
+
     animateElements.forEach(el => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(30px)';
@@ -69,10 +69,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Inicializar EmailJS
+const YOUR_PUBLIC_KEY = 'vUQuzM8CNugaOEWw1';
+(function () {
+    emailjs.init("vUQuzM8CNugaOEWw1"); // Substitua pela sua chave pública do EmailJS
+})();
+
 // Formulário de contato
-document.getElementById('contactForm').addEventListener('submit', function(e) {
+document.getElementById('contactForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    
+
     // Coletar dados do formulário
     const formData = new FormData(this);
     const nome = formData.get('nome');
@@ -80,31 +86,40 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
     const telefone = formData.get('telefone');
     const curso = formData.get('curso');
     const mensagem = formData.get('mensagem');
-    
-    // Criar mensagem para WhatsApp
-    const whatsappMessage = `
-*Nova Mensagem do Site - Michel França Curso Preparatório*
 
-*Nome:* ${nome}
-*E-mail:* ${email}
-*Telefone:* ${telefone}
-*Curso de Interesse:* ${curso}
+    // Mostrar loading
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    submitBtn.disabled = true;
 
-*Mensagem:*
-${mensagem}
-    `.trim();
-    
-    // Criar URL do WhatsApp
-    const whatsappUrl = `https://wa.me/5521959527953?text=${encodeURIComponent(whatsappMessage)}`;
-    
-    // Abrir WhatsApp
-    window.open(whatsappUrl, '_blank');
-    
-    // Mostrar mensagem de sucesso
-    showNotification('Mensagem enviada! Redirecionando para o WhatsApp...', 'success');
-    
-    // Limpar formulário
-    this.reset();
+    // Preparar dados para envio
+    const templateParams = {
+        nome: nome,
+        email: email,
+        telefone: telefone,
+        curso: curso,
+        mensagem: mensagem
+    };
+
+    // Enviar e-mail usando EmailJS
+    const YOUR_SERVICE_ID = 'service_22ainz4'
+    const YOUR_TEMPLATE_ID = 'template_fo85b2q'
+
+    emailjs.send(YOUR_SERVICE_ID, YOUR_TEMPLATE_ID, templateParams)
+        .then(function (response) {
+            console.log('E-mail enviado com sucesso!', response.status, response.text);
+            showNotification('E-mail enviado com sucesso! Entraremos em contato em breve.', 'success');
+            document.getElementById('contactForm').reset();
+        }, function (error) {
+            console.error('Erro ao enviar e-mail:', error);
+            showNotification('Erro ao enviar e-mail. Tente novamente ou entre em contato pelo WhatsApp.', 'error');
+        })
+        .finally(function () {
+            // Restaurar botão
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
 });
 
 // Função para mostrar notificações
@@ -114,20 +129,21 @@ function showNotification(message, type = 'info') {
     if (existingNotification) {
         existingNotification.remove();
     }
-    
+
     // Criar elemento da notificação
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    const iconClass = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
     notification.innerHTML = `
         <div class="notification-content">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+            <i class="fas fa-${iconClass}"></i>
             <span>${message}</span>
         </div>
         <button class="notification-close">
             <i class="fas fa-times"></i>
         </button>
     `;
-    
+
     // Adicionar estilos CSS para a notificação
     const style = document.createElement('style');
     style.textContent = `
@@ -167,6 +183,10 @@ function showNotification(message, type = 'info') {
             font-size: 1.2rem;
         }
         
+        .notification-error .notification-content i {
+            color: #dc2626;
+        }
+        
         .notification-close {
             background: none;
             border: none;
@@ -200,21 +220,21 @@ function showNotification(message, type = 'info') {
             }
         }
     `;
-    
+
     if (!document.querySelector('style[data-notification]')) {
         style.setAttribute('data-notification', 'true');
         document.head.appendChild(style);
     }
-    
+
     // Adicionar ao DOM
     document.body.appendChild(notification);
-    
+
     // Botão de fechar
     const closeBtn = notification.querySelector('.notification-close');
     closeBtn.addEventListener('click', () => {
         notification.remove();
     });
-    
+
     // Auto-remover após 5 segundos
     setTimeout(() => {
         if (notification.parentNode) {
@@ -224,26 +244,26 @@ function showNotification(message, type = 'info') {
 }
 
 // Adicionar efeito de hover nos cards
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const cards = document.querySelectorAll('.curso-card, .hero-card, .stat');
-    
+
     cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
+        card.addEventListener('mouseenter', function () {
             this.style.transform = 'translateY(-10px) scale(1.02)';
         });
-        
-        card.addEventListener('mouseleave', function() {
+
+        card.addEventListener('mouseleave', function () {
             this.style.transform = 'translateY(0) scale(1)';
         });
     });
 });
 
 // Adicionar efeito de parallax suave no hero
-window.addEventListener('scroll', function() {
+window.addEventListener('scroll', function () {
     const scrolled = window.pageYOffset;
     const hero = document.querySelector('.hero');
     const heroContent = document.querySelector('.hero-content');
-    
+
     if (hero && heroContent) {
         const rate = scrolled * -0.5;
         heroContent.style.transform = `translateY(${rate}px)`;
@@ -253,12 +273,12 @@ window.addEventListener('scroll', function() {
 // Adicionar contador animado nas estatísticas
 function animateCounters() {
     const counters = document.querySelectorAll('.stat h3');
-    
+
     counters.forEach(counter => {
         const target = parseInt(counter.textContent.replace(/[^\d]/g, ''));
         const increment = target / 100;
         let current = 0;
-        
+
         const updateCounter = () => {
             if (current < target) {
                 current += increment;
@@ -274,13 +294,13 @@ function animateCounters() {
                 counter.textContent = target + (counter.textContent.includes('%') ? '%' : '+');
             }
         };
-        
+
         updateCounter();
     });
 }
 
 // Observar seção de estatísticas para animar contadores
-const statsObserver = new IntersectionObserver(function(entries) {
+const statsObserver = new IntersectionObserver(function (entries) {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             animateCounters();
@@ -289,7 +309,7 @@ const statsObserver = new IntersectionObserver(function(entries) {
     });
 }, { threshold: 0.5 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const statsSection = document.querySelector('.stats');
     if (statsSection) {
         statsObserver.observe(statsSection);
@@ -300,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function typeWriter(element, text, speed = 100) {
     let i = 0;
     element.innerHTML = '';
-    
+
     function type() {
         if (i < text.length) {
             element.innerHTML += text.charAt(i);
@@ -308,12 +328,12 @@ function typeWriter(element, text, speed = 100) {
             setTimeout(type, speed);
         }
     }
-    
+
     type();
 }
 
 // Inicializar efeito de digitação quando a página carregar
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const title = document.querySelector('.hero-text h1');
     if (title) {
         const originalText = title.textContent;
@@ -322,15 +342,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Adicionar validação em tempo real no formulário
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const inputs = document.querySelectorAll('input, select, textarea');
-    
+
     inputs.forEach(input => {
-        input.addEventListener('blur', function() {
+        input.addEventListener('blur', function () {
             validateField(this);
         });
-        
-        input.addEventListener('input', function() {
+
+        input.addEventListener('input', function () {
             if (this.classList.contains('error')) {
                 validateField(this);
             }
@@ -342,11 +362,11 @@ function validateField(field) {
     const value = field.value.trim();
     let isValid = true;
     let message = '';
-    
+
     // Remover classes de erro anteriores
     field.classList.remove('error');
     removeErrorMessage(field);
-    
+
     // Validações específicas
     if (field.hasAttribute('required') && !value) {
         isValid = false;
@@ -364,12 +384,12 @@ function validateField(field) {
             message = 'Por favor, insira um telefone válido (ex: (21) 99999-9999)';
         }
     }
-    
+
     if (!isValid) {
         field.classList.add('error');
         showFieldError(field, message);
     }
-    
+
     return isValid;
 }
 
@@ -383,7 +403,7 @@ function showFieldError(field, message) {
         margin-top: 0.25rem;
         display: block;
     `;
-    
+
     field.parentNode.appendChild(errorDiv);
 }
 
@@ -395,10 +415,10 @@ function removeErrorMessage(field) {
 }
 
 // Adicionar máscara para telefone
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const phoneInput = document.getElementById('telefone');
     if (phoneInput) {
-        phoneInput.addEventListener('input', function(e) {
+        phoneInput.addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length >= 2) {
                 value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
